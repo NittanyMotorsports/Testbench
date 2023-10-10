@@ -5,6 +5,7 @@ Welcome to the Nittany Motorsports Testing and Validation repository! This repos
 ## Table of Contents
 
 - [Introduction](#introduction)
+- [Member List](#member-list)
 - [Folder Structure](#folder-structure)
 - [Setup and Installation](#setup-and-installation)
 - [Testing Procedures](#testing-procedures)
@@ -15,6 +16,13 @@ Welcome to the Nittany Motorsports Testing and Validation repository! This repos
 ## Introduction
 
 This repository serves as the central hub for managing our testing and validation efforts. We will be using a Raspberry Pi 4 running Linux Ubuntu 22.04 as our testing machine. Slash will be our main testing framework.
+
+## Member List
+
+- `Abdu Keeley`: High Voltage Lead
+- `Christopher McKinney`: Low Voltage Lead
+- `Kyle George`: Project Lead
+- `you`: position
 
 ## Folder Structure
 
