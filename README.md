@@ -23,6 +23,7 @@ This repository serves as the central hub for managing our testing and validatio
 - `Christopher McKinney`: Low Voltage Lead
 - `Kyle George`: Project Lead | Software Engineer
 - `Bryan Lim`: Project Lead | Electrical Engineer
+- `Rishab Srinivasan`: Project Member | Computer Engineer
 - `you`: position
 
 ## Folder Structure
