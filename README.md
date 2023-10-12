@@ -21,7 +21,8 @@ This repository serves as the central hub for managing our testing and validatio
 
 - `Abdu Keeley`: High Voltage Lead
 - `Christopher McKinney`: Low Voltage Lead
-- `Kyle George`: Project Lead
+- `Kyle George`: Project Lead | Software Engineer
+- `Bryan Lim`: Project Lead | Electrical Engineer
 - `you`: position
 
 ## Folder Structure
