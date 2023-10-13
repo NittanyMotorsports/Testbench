@@ -56,6 +56,7 @@ Please follow these guidelines:
 2. Make your changes and document them thoroughly.
 3. Test your changes to ensure they work as expected.
 4. Submit a pull request with a clear description of your changes.
+5. Link any issue ticket related to the changes made.
 
 ## License
 
