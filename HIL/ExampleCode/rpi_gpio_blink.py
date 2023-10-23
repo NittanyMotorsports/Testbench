@@ -7,10 +7,10 @@ Follow this layout for how to control the GPIOs on the rpi
 import RPi.GPIO as GPIO
 import time
 
-GPIO.setmode(GPIO.BCM)  # Use BCM numbering for GPIO pins
+GPIO.setmode(GPIO.BOARD)  # Use board pinout numbering for GPIO pins
 
 # Set up the GPIO pin
-led_pin = 17
+led_pin = 11
 GPIO.setup(led_pin, GPIO.OUT)
 
 # Turn the LED on and off
