@@ -14,9 +14,10 @@ led_pin = 11
 GPIO.setup(led_pin, GPIO.OUT)
 
 # Turn the LED on and off
-GPIO.output(led_pin, GPIO.HIGH)  # Turn on
-time.sleep(2)
-GPIO.output(led_pin, GPIO.LOW)   # Turn off
+while True:
+    GPIO.output(led_pin, GPIO.HIGH)  # Turn on
+    time.sleep(2)
+    GPIO.output(led_pin, GPIO.LOW)   # Turn off
 
 # Clean up
 GPIO.cleanup()
