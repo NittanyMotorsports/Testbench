@@ -24,6 +24,8 @@ This repository serves as the central hub for managing our testing and validatio
 - `Kyle George`: Project Lead | Software Engineer
 - `Bryan Lim`: Project Lead | Electrical Engineer
 - `Rishab Srinivasan`: Project Member | Computer Engineer
+- `Anushcka Joshi`: Project Member | Software Engineer
+- `John Benton`: Project Member | Software Engineer
 - `you`: position
 
 ## Folder Structure
