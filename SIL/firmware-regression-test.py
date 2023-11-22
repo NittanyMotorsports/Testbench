@@ -11,7 +11,7 @@ bus = can.interface.Bus(channel="can0", bustype='socketcan')
 def test_MC_clear_faults():
     pass
 
-def read() :
+def read():
     message = bus.recv(10.0)
     print(message)
 
