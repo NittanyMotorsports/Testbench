@@ -1,17 +1,9 @@
-from firmware_devices import CANableSniffer
+from firmware_devices import CANableSniffer, GPIOController
 
-import can
-import os
 import time
 import slash
 
-os.system('sudo ifconfig can0 down')
-os.system('sudo ip link set can0 type can bitrate 500000')
-os.system('sudo ifconfig can0 up')
-
-bus = can.interface.Bus(channel="can0", bustype='socketcan')
-
-def test_MC_clear_faults(CANableSniffer):
+def test_MC_clear_faults(CANableSniffer, GPIOController):
     """
     This test is designed to exercise the clear faults functionality. The test conducts the
     following steps:
@@ -42,16 +34,3 @@ def test_MC_clear_faults(CANableSniffer):
     # Step 5: Indicate button press with GPIO
 
     # Step 6: Wait for clear faults CAN message
-
-def read():
-    message = bus.recv(10.0)
-    print(message)
-
-try:
-    while True:
-        read()
-except:
-    pass
-
-finally:
-    os.system('sudo ifconfig can0 down')
