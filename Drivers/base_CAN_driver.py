@@ -20,5 +20,9 @@ class BaseCANDriver(ABC):
         pass
 
     @abstractmethod
+    def wait_until_id(self,  id: int, timeout_s: Union[float, int]=20):
+        pass
+
+    @abstractmethod
     def disconnect(self):
         pass
