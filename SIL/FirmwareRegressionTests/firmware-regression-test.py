@@ -24,13 +24,23 @@ def test_MC_clear_faults(CANableSniffer, GPIOController):
     """
 
     # Step 1: Initialize testing equipment
+    CANableSniffer.connect()
 
     # Step 2: Verify the STM and testing machine are communicating on the same bus by checking for the STM throttle message
+    if CANableSniffer.wait_until_id(id=0x0C0, timeout_s=1.0) == False:
+        slash.add_failure("Could not establish CAN connection with STM.")
+        return
 
     # Step 3: Send CAN message indicating fault has occured
+    id = 0x0AB
+    data = [0,0,0,0,b'00000111',0,0,0]
+    CANableSniffer.write(id=id, data=data)
 
     # Step 4: Check that LED has turned on
 
     # Step 5: Indicate button press with GPIO
 
     # Step 6: Wait for clear faults CAN message
+
+    # Step 7: Reset testing equipment
+    CANableSniffer.disconnect()

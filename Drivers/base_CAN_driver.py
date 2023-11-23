@@ -8,7 +8,7 @@ from typing import List, Union
 class BaseCANDriver(ABC):
 
     @abstractmethod
-    def connect(self, CAN_channel: str, baud_rate: int, bus_type: str):
+    def connect(self):
         pass
 
     @abstractmethod
