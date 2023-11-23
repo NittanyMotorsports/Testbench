@@ -1,6 +1,6 @@
 import slash
-from ...Drivers.CANable_driver import CANableDriver
 from ...Drivers.GPIODriver import GPIODriver
+from ...Drivers.CANable_driver import CANableDriver
 
 @slash.fixture
 def CANAbleSniffer():

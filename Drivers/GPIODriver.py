@@ -1,5 +1,6 @@
 import RPi.GPIO as GPIO
 import time
+from .CANable_driver import CANableDriver
 
 UNAVAILABLE_PINS = (1, 2, 4, 6, 9, 14, 17, 20, 25, 30, 34, 39)
 

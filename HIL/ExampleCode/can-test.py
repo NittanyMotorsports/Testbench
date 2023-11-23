@@ -6,13 +6,13 @@ os.system('sudo ifconfig can0 down')
 os.system('sudo ip link set can0 type can bitrate 500000')
 os.system('sudo ifconfig can0 up')
 
-bus = can.interface.Bus(channel="can0", bustype='socketcan')
+bus = can.interface.Bus(channel="can0", interface='socketcan')
 
 def test_MC_clear_faults():
     pass
 
 def read() :
-    message = bus.recv(10.0)
+    message = bus.recv(1.0)
     print(message)
 
 try:
