@@ -1,6 +1,7 @@
 import slash
 import RPi.GPIO as GPIO
-#import CANDriver
+import CANDriver
+import time
 
 class Pin:
     def __init__(self, pin_num, config):
@@ -13,7 +14,69 @@ RPi_GPIOs = {
     "BrakesLeft": Pin(11, GPIO.OUT),
     "BrakesRight": Pin(13, GPIO.OUT),
     "Buzzer": Pin(15, GPIO.IN),
+    "APPSLeft": Pin(17, GPIO.OUT),
+    "APPSRight": Pin(19, GPIO.OUT)
 }
+
+def test_apps_plus_brake():
+    '''
+    APPS + Brake:
+    Checks that if APPS is GPIO_HIGH and Brakes are GPIO_HIGH then the STM sends a zero throttle 
+    CAN message. Also checks that after Brakes are set to GPIO_LOW and APPS is set to GPIO_LOW 
+    for a small amount of time and then set back to GPIO_HIGH that throttle CAN message 
+    is back to non-zero
+    '''
+    # Step 1: Setting up environment (neither pedals are pressed)
+    # Device is in idle state at this point
+    GPIO.output(RPi_GPIOs["BrakesLeft"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["BrakesRight"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
+
+    # Step 2: Check for STM CAN message (should send a zero throttle message)
+    #CANDriver.read()
+
+    # Step 3: Setting APPS to high while brakes remain at low (throttle is being pressed)
+    GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.HIGH)
+    GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.HIGH)
+
+    # Step 4: Check for STM CAN message (should send a non-zero throttle message)
+    #CANDriver.read()
+
+    # Step 5: Setting Brakes to high while APPS remains at high (both pedals are being pressed):
+    GPIO.output(RPi_GPIOs["BrakesLeft"].pin_num, GPIO.HIGH)
+    GPIO.output(RPi_GPIOs["BrakesRight"].pin_num, GPIO.HIGH)
+
+    # Step 6: Check for STM CAN message (should send a zero throttle message)
+    #CANDriver.read()
+
+    time.sleep(2) # Add time delay to emulate real procedure
+
+    # Step 7: Setting Brakes to low and keeping APPS at high:
+    GPIO.output(RPi_GPIOs["BrakesLeft"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["BrakesRight"].pin_num, GPIO.LOW)
+
+    # Step 8: Check for STM CAN message (should send a non-zero throttle message as we are out of the fault state)
+    #CANDriver.read()
+
+    # Step 9: Setting Brakes to low and APPS to low
+    GPIO.output(RPi_GPIOs["BrakesLeft"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["BrakesRight"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
+
+    # Step 10: Check for STM CAN message (should send a zero throttle message)
+    #CANDriver.read()
+
+    time.sleep(2) # Add time delay to emulate real procedure
+
+
+    # Step 11: Setting APPS back to high
+    GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.HIGH)
+    GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.HIGH)
+
+    # Step 12: Check for STM CAN message (should be back to a non-zero throttle message)
+    #CANDriver.read()
 
 def test_ready_to_drive():
     """
