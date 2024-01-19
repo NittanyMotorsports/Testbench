@@ -1,11 +1,9 @@
-# from base_CAN_driver import BaseCANDriver
-
 import can
 import os
 import time
 from typing import List, Union
 
-class CANableDriver:
+class CANDriver:
     def __init__(self, CAN_channel: str="can0", baud_rate: int=500_000, bus_type: str="socketcan") -> None:
         self.CAN_channel = CAN_channel
         self.baud_rate = baud_rate

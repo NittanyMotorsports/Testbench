@@ -1,6 +1,6 @@
 import slash
 import RPi.GPIO as GPIO
-#import CANDriver
+from ..Drivers.CANDriver import CANDriver
 import time
 
 class Pin:
@@ -15,6 +15,8 @@ RPi_GPIOs = {
     "BrakesRight": Pin(13, GPIO.OUT),
     "Buzzer": Pin(15, GPIO.IN),
 }
+
+CAN_BUS = None
 
 def test_ready_to_drive():
     """
@@ -44,22 +46,23 @@ def test_ready_to_drive():
         if GPIO.input(RPi_GPIOs["Buzzer"].pin_num) == GPIO.HIGH:
             success = True
     if success == False:
-        slash.add_failure("Buzzer did not output voltage when Ready To Drive was activated with both brakes and Tractive System Active signal present.")
+        slash.add_failure("Buzzer did not output voltage when Ready To Drive was activated with both brakes signal and Tractive System Active signal present.")
 
     # Step 5: Check that throttle CAN message contains correct inverter enable bit value (timeout after 5 seconds if no message was received)
-    # message = CANDriver.wait_until_id(id=0x0C0, timeout_s=5)
-    # if message == None:
-    #     slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
-    # if message.data[5] != 1:
-    #     slash.add_failure(f"Inverter enable bit was not changed to 1, value is: {message.data[5]}")
-
-    # Step 6: Reset all pins to put STM32F4 back in idle state
+    message = CAN_BUS.wait_until_id(id=0x0C0, timeout_s=5)
+    if message == None:
+        slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
+    elif message.data[5] != 1:
+        slash.add_failure(f"Inverter enable bit was not changed to 1, value is: {message.data[5]}")
 
 def configure_RPi():
     """ Sets up the RPi for all tests. Connects to CAN bus and configures GPIOs. """
     GPIO.setmode(GPIO.BOARD)
     for pin in RPi_GPIOs:
         GPIO.setup(RPi_GPIOs[pin].pin_num, RPi_GPIOs[pin].config)
+    
+    CAN_BUS = CANDriver()
+    CAN_BUS.connect()
 
 
 configure_RPi()
