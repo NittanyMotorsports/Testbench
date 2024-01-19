@@ -50,7 +50,8 @@ def test_ready_to_drive():
     # message = CANDriver.wait_until_id(id=0x0C0, timeout_s=5)
     # if message == None:
     #     slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
-    # Check for correct bit value
+    # if message.data[5] != 1:
+    #     slash.add_failure(f"Inverter enable bit was not changed to 1, value is: {message.data[5]}")
 
     # Step 6: Reset all pins to put STM32F4 back in idle state
 
