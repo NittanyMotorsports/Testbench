@@ -34,21 +34,39 @@ def test_apps_plus_brake():
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
 
     # Step 2: Check for STM CAN message (should send a zero throttle message)
-    #CANDriver.read()
+    message = CANDriver.wait_until_id(0X0C0)
+    if message == None:
+        slash.add_failure('Did not receive CAN message within time expected')
+    else:
+        data = message.data
+        if data[0] > 0:
+            slash.add_failure('Expected a zero throttle CAN message, recieved a non zero message') 
 
     # Step 3: Setting APPS to high while brakes remain at low (throttle is being pressed)
     GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.HIGH)
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.HIGH)
 
     # Step 4: Check for STM CAN message (should send a non-zero throttle message)
-    #CANDriver.read()
+    message = CANDriver.wait_until_id(0X0C0)
+    if message == None:
+        slash.add_failure('Did not receive CAN message within time expected')
+    else:
+        data = message.data
+        if data[0] == 0:
+            slash.add_failure('Expected a non zero throttle CAN message, recieved a zero message') 
 
     # Step 5: Setting Brakes to high while APPS remains at high (both pedals are being pressed):
     GPIO.output(RPi_GPIOs["BrakesLeft"].pin_num, GPIO.HIGH)
     GPIO.output(RPi_GPIOs["BrakesRight"].pin_num, GPIO.HIGH)
 
     # Step 6: Check for STM CAN message (should send a zero throttle message)
-    #CANDriver.read()
+    message = CANDriver.wait_until_id(0X0C0)
+    if message == None:
+        slash.add_failure('Did not receive CAN message within time expected')
+    else:
+        data = message.data
+        if data[0] > 0:
+            slash.add_failure('Expected a zero throttle CAN message, recieved a non zero message') 
 
     time.sleep(2) # Add time delay to emulate real procedure
 
@@ -57,7 +75,13 @@ def test_apps_plus_brake():
     GPIO.output(RPi_GPIOs["BrakesRight"].pin_num, GPIO.LOW)
 
     # Step 8: Check for STM CAN message (should send a non-zero throttle message as we are out of the fault state)
-    #CANDriver.read()
+    message = CANDriver.wait_until_id(0X0C0)
+    if message == None:
+        slash.add_failure('Did not receive CAN message within time expected')
+    else:
+        data = message.data
+        if data[0] == 0:
+            slash.add_failure('Expected a non zero throttle CAN message, recieved a zero message') 
 
     # Step 9: Setting Brakes to low and APPS to low
     GPIO.output(RPi_GPIOs["BrakesLeft"].pin_num, GPIO.LOW)
@@ -66,7 +90,13 @@ def test_apps_plus_brake():
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
 
     # Step 10: Check for STM CAN message (should send a zero throttle message)
-    #CANDriver.read()
+    message = CANDriver.wait_until_id(0X0C0)
+    if message == None:
+        slash.add_failure('Did not receive CAN message within time expected')
+    else:
+        data = message.data
+        if data[0] > 0:
+            slash.add_failure('Expected a zero throttle CAN message, recieved a non zero message') 
 
     time.sleep(2) # Add time delay to emulate real procedure
 
@@ -76,7 +106,13 @@ def test_apps_plus_brake():
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.HIGH)
 
     # Step 12: Check for STM CAN message (should be back to a non-zero throttle message)
-    #CANDriver.read()
+    message = CANDriver.wait_until_id(0X0C0)
+    if message == None:
+        slash.add_failure('Did not receive CAN message within time expected')
+    else:
+        data = message.data
+        if data[0] == 0:
+            slash.add_failure('Expected a non zero throttle CAN message, recieved a zero message') 
 
 def test_ready_to_drive():
     """
