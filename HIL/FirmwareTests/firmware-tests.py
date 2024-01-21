@@ -1,6 +1,6 @@
 import slash
 import RPi.GPIO as GPIO
-from ..Drivers.CANDriver import CANDriver
+from .Drivers.CANDriver import CANDriver
 import time
 
 class Pin:
@@ -11,8 +11,8 @@ class Pin:
 RPi_GPIOs = {
     "TSA": Pin(3, GPIO.OUT),
     "RTD_button": Pin(5, GPIO.OUT),
-    "BrakesLeft": Pin(11, GPIO.OUT),
-    "BrakesRight": Pin(13, GPIO.OUT),
+    "BrakesFront": Pin(11, GPIO.OUT),
+    "BrakesRear": Pin(13, GPIO.OUT),
     "Buzzer": Pin(15, GPIO.IN),
 }
 
@@ -30,8 +30,8 @@ def test_ready_to_drive():
     GPIO.output(RPi_GPIOs["TSA"].pin_num, GPIO.HIGH)
 
     # Step 2: Turn on GPIO on RPi for both brake inputs
-    GPIO.output(RPi_GPIOs["BrakesLeft"].pin_num, GPIO.HIGH)
-    GPIO.output(RPi_GPIOs["BrakesRight"].pin_num, GPIO.HIGH)
+    GPIO.output(RPi_GPIOs["BrakesFront"].pin_num, GPIO.HIGH)
+    GPIO.output(RPi_GPIOs["BrakesRear"].pin_num, GPIO.HIGH)
 
     # Step 4: Delay to allow signal to reach STM32F4 before activating RTD
     time.sleep(0.5)
@@ -46,7 +46,7 @@ def test_ready_to_drive():
         if GPIO.input(RPi_GPIOs["Buzzer"].pin_num) == GPIO.HIGH:
             success = True
     if success == False:
-        slash.add_failure("Buzzer did not output voltage when Ready To Drive was activated with both brakes signal and Tractive System Active signal present.")
+        slash.add_failure(f"Buzzer did not output voltage when Ready To Drive ({GPIO.input(RPi_GPIOs['Buzzer'].pin_num)}) was activated with both brakes signal and Tractive System Active signal present.")
 
     # Step 5: Check that throttle CAN message contains correct inverter enable bit value (timeout after 5 seconds if no message was received)
     message = CAN_BUS.wait_until_id(id=0x0C0, timeout_s=5)
@@ -54,6 +54,8 @@ def test_ready_to_drive():
         slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
     elif message.data[5] != 1:
         slash.add_failure(f"Inverter enable bit was not changed to 1, value is: {message.data[5]}")
+    
+    CAN_BUS.disconnect()
 
 def configure_RPi():
     """ Sets up the RPi for all tests. Connects to CAN bus and configures GPIOs. """
