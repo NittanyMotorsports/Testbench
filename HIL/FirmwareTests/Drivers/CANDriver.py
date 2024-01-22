@@ -42,7 +42,7 @@ class CANDriver:
         start = time.time()
         while time.time() - start < timeout_s:
             message = self.read(1.0)
-            if message.arbitration_id == id:
+            if message != None and message.arbitration_id == id:
                 return message
         return None
 
