@@ -18,26 +18,9 @@ RPi_GPIOs = {
     "APPSLeft": Pin(19, GPIO.OUT),
     "APPSRight": Pin(21, GPIO.OUT)
 }
-
 CAN_BUS = CANDriver()
-CAN_BUS.connect()
-
-GPIO.setmode(GPIO.BOARD)
-for pin in RPi_GPIOs:
-    GPIO.setup(RPi_GPIOs[pin].pin_num, RPi_GPIOs[pin].config)
-
-slash.add_critical_cleanup(CAN_BUS.disconnect)
-slash.add_critical_cleanup(GPIO.cleanup)
-
-print("\n\nConfigured\n\n")
-
-# @slash.tag("order", 1)
-# def test_configure_RPi():
-#     """ Sets up the RPi for all tests. Connects to CAN bus and configures GPIOs. """
     
-
-@slash.tag("order", 1)
-def test_ready_to_drive():
+def ready_to_drive_test():
     """
     This tests the functionality of the Ready To Drive (RTD) button on the vehicle. Once the
     tractive system gives an active signal and the brakes are pressed to mechanical engage
@@ -79,3 +62,17 @@ def test_ready_to_drive():
         slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
     elif message.data[5] != 1:
         slash.add_failure(f"Inverter enable bit was not changed to 1, value is: {message.data}")
+
+def configure_env():
+    CAN_BUS.connect()
+
+    GPIO.setmode(GPIO.BOARD)
+    for pin in RPi_GPIOs:
+        GPIO.setup(RPi_GPIOs[pin].pin_num, RPi_GPIOs[pin].config)
+
+    slash.add_critical_cleanup(CAN_BUS.disconnect)
+    slash.add_critical_cleanup(GPIO.cleanup)
+
+def test_runner():
+    configure_env()
+    ready_to_drive_test()
