@@ -28,7 +28,7 @@ def ready_to_drive_test():
     throttle CAN message should contain the inverter enable bit flipped from 0 to 1.
     """
 
-    # Step 1: Put RTD button state to LOW
+    # Step 1: Put RTD button state to LOW and pedals to same 'position'
     GPIO.output(RPi_GPIOs["RTD_button"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
@@ -73,6 +73,6 @@ def configure_env():
     slash.add_critical_cleanup(CAN_BUS.disconnect)
     slash.add_critical_cleanup(GPIO.cleanup)
 
-def test_runner():
+def test_driver():
     configure_env()
     ready_to_drive_test()
