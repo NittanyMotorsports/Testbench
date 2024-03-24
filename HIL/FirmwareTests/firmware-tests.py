@@ -39,7 +39,7 @@ def ready_to_drive_test():
     GPIO.output(RPi_GPIOs["BrakesRear"].pin_num, GPIO.HIGH)
 
     # Step 4: Delay to allow signal to reach STM32F4 before activating RTD
-    time.sleep(1)
+    time.sleep(0.1)
 
     # Step 5: Turn on GPIO on RPi for RTD button
     GPIO.output(RPi_GPIOs["RTD_button"].pin_num, GPIO.HIGH)
