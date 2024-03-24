@@ -9,7 +9,6 @@ class Pin:
         self.config = config
 
 RPi_GPIOs = {
-    "TSA": Pin(3, GPIO.OUT),
     "RTD_button": Pin(5, GPIO.OUT),
     "BrakesFront": Pin(11, GPIO.OUT),
     "BrakesRear": Pin(13, GPIO.OUT),
@@ -32,8 +31,8 @@ def ready_to_drive_test():
     GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
 
-    # Step 2: Turn on GPIO on RPi for TSA
-    GPIO.output(RPi_GPIOs["TSA"].pin_num, GPIO.HIGH)
+    # Step 2: Send TSA over CAN to STM32F4
+    CAN_BUS.write(id=0x3A4, data=[2,0,0,0,0,0,0,0])
 
     # Step 3: Turn on GPIO on RPi for both brake inputs
     GPIO.output(RPi_GPIOs["BrakesFront"].pin_num, GPIO.HIGH)
@@ -63,7 +62,7 @@ def ready_to_drive_test():
         slash.add_failure(f"Inverter enable bit was not changed to 1, value is: {message.data}")
     
     # Step 8: Reset RPi outputs
-    GPIO.output(RPi_GPIOs["TSA"].pin_num, GPIO.LOW)
+    CAN_BUS.write(id=0x3A4, data=[0,0,0,0,0,0,0,0])
     GPIO.output(RPi_GPIOs["BrakesFront"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["BrakesRear"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["RTD_button"].pin_num, GPIO.LOW)
@@ -78,10 +77,13 @@ def apps_test():
     # Step 2: Put STM into RTD state
     GPIO.output(RPi_GPIOs["BrakesFront"].pin_num, GPIO.HIGH)
     GPIO.output(RPi_GPIOs["BrakesRear"].pin_num, GPIO.HIGH)
-    GPIO.output(RPi_GPIOs["TSA"].pin_num, GPIO.HIGH)
+    CAN_BUS.write(id=0x3A4, data=[2,0,0,0,0,0,0,0])
     GPIO.output(RPi_GPIOs["RTD_button"].pin_num, GPIO.HIGH)
 
-    # Step 3: Validate STM rached RTD state
+    # Step 3: Delay for 100 milliseconds
+    time.sleep(0.1)
+
+    # Step 4: Validate STM rached RTD state
     message = CAN_BUS.wait_until_id(id=0x0C0, timeout_s=5)
     if message == None:
         slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
@@ -90,25 +92,25 @@ def apps_test():
         slash.add_failure(f"Inverter enable bit was not changed to 1, value is: {message.data}")
         return
     
-    # Step 4: Set brake inputs back to low
+    # Step 5: Set brake inputs back to low
     GPIO.output(RPi_GPIOs["BrakesFront"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["BrakesRear"].pin_num, GPIO.LOW)
     
-    # Step 5: Set both APPS inputs to high
+    # Step 6: Set both APPS inputs to high
     GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.HIGH)
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.HIGH)
 
-    # Step 6: Validate STM reports max throttle input over CAN
+    # Step 7: Validate STM reports max throttle input over CAN
     message = CAN_BUS.wait_until_id(id=0x0C0, timeout_s=5)
     if message == None:
         slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
     elif ((message.data[1] << 8) | message.data[0]) != 2300:
         slash.add_failure(f"STM didn't correctly send max throttle when both APPS set to max input. Throttle reported: {(message.data[1] << 8) | message.data[0]}")
 
-    # Step 7: Set one APPS input to low
+    # Step 8: Set one APPS input to low
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
 
-    # Step 8: Validate STM correclty sends 0 throttle
+    # Step 9: Validate STM correclty sends 0 throttle
     message = CAN_BUS.wait_until_id(id=0x0C0, timeout_s=5)
     if message == None:
         slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
@@ -117,12 +119,12 @@ def apps_test():
         slash.add_failure(f"STM didn't report 0 throttle. Throttle reported: {((message.data[1] << 8) | message.data[0])}")
         return
     
-    # Step 9: Reset RPi outputs
+    # Step 10: Reset RPi outputs
     GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["BrakesFront"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["BrakesRear"].pin_num, GPIO.LOW)
-    GPIO.output(RPi_GPIOs["TSA"].pin_num, GPIO.LOW)
+    CAN_BUS.write(id=0x3A4, data=[0,0,0,0,0,0,0,0])
     GPIO.output(RPi_GPIOs["RTD_button"].pin_num, GPIO.LOW)
 
 
@@ -142,10 +144,13 @@ def apps_plus_brake_test():
     # Step 2: Put STM into RTD state
     GPIO.output(RPi_GPIOs["BrakesFront"].pin_num, GPIO.HIGH)
     GPIO.output(RPi_GPIOs["BrakesRear"].pin_num, GPIO.HIGH)
-    GPIO.output(RPi_GPIOs["TSA"].pin_num, GPIO.HIGH)
+    CAN_BUS.write(id=0x3A4, data=[2,0,0,0,0,0,0,0])
     GPIO.output(RPi_GPIOs["RTD_button"].pin_num, GPIO.HIGH)
 
-    # Step 3: Validate STM rached RTD state
+    # Step 3: Delay for 100 milliseconds
+    time.sleep(0.1)
+
+    # Step 4: Validate STM rached RTD state
     message = CAN_BUS.wait_until_id(id=0x0C0, timeout_s=5)
     if message == None:
         slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
@@ -154,64 +159,64 @@ def apps_plus_brake_test():
         slash.add_failure(f"Inverter enable bit was not changed to 1, value is: {message.data}")
         return
     
-    # Step 4: Set brake inputs back to low
+    # Step 5: Set brake inputs back to low
     GPIO.output(RPi_GPIOs["BrakesFront"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["BrakesRear"].pin_num, GPIO.LOW)
 
-    # Step 5: Delay for 100 milliseconds
+    # Step 6: Delay for 100 milliseconds
     time.sleep(0.1)
 
-    # Step 6: Setting APPS to high while brakes remain at low
+    # Step 7: Setting APPS to high while brakes remain at low
     GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.HIGH)
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.HIGH)
 
-    # Step 7: Check for STM reporting max throttle
+    # Step 8: Check for STM reporting max throttle
     message = CAN_BUS.wait_until_id(0X0C0)
     if message == None:
         slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
     elif ((message.data[1] << 8) | message.data[0]) != 2300:
         slash.add_failure(slash.add_failure(f"STM didn't correctly send max throttle when both APPS set to max input. Throttle reported: {(message.data[1] << 8) | message.data[0]}")) 
 
-    # Step 8: Setting brakes to high while throttle input remains high
+    # Step 9: Setting brakes to high while throttle input remains high
     GPIO.output(RPi_GPIOs["BrakesLeft"].pin_num, GPIO.HIGH)
     GPIO.output(RPi_GPIOs["BrakesRight"].pin_num, GPIO.HIGH)
 
-    # Step 9: Delay for 100 milliseconds
+    # Step 10: Delay for 100 milliseconds
     time.sleep(0.1)
 
-    # Step 10: Check for STM reporting 0 throttle input
+    # Step 11: Check for STM reporting 0 throttle input
     message = CAN_BUS.wait_until_id(0X0C0)
     if message == None:
         slash.add_failure('Did not receive CAN message within time expected')
     elif ((message.data[1] << 8) | message.data[0]) != 0:
             slash.add_failure(f"Throttle input given while brakes pressed didn't result in 0 throttle reported. Throttle reported: {((message.data[1] << 8) | message.data[0])}") 
 
-    # Step 11: Set throttle and brakes back to low
+    # Step 12: Set throttle and brakes back to low
     GPIO.output(RPi_GPIOs["BrakesLeft"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["BrakesRight"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
 
-    # Step 12: Delay for 100 milliseconds
+    # Step 13: Delay for 100 milliseconds
     time.sleep(0.1)
     
-    # Step 13: Set throttle back to max
+    # Step 14: Set throttle back to max
     GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.HIGH)
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.HIGH)
 
-    # Step 14: Check for STM reporting max throttle
+    # Step 15: Check for STM reporting max throttle
     message = CAN_BUS.wait_until_id(0X0C0)
     if message == None:
         slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
     elif ((message.data[1] << 8) | message.data[0]) != 2300:
         slash.add_failure(slash.add_failure(f"STM didn't correctly send max throttle when both APPS set to max input. Throttle reported: {(message.data[1] << 8) | message.data[0]}")) 
 
-    # Step 15: Reset RPi outputs
+    # Step 16: Reset RPi outputs
     GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["BrakesLeft"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["BrakesRight"].pin_num, GPIO.LOW)
-    GPIO.output(RPi_GPIOs["TSA"].pin_num, GPIO.LOW)
+    CAN_BUS.write(id=0x3A4, data=[0,0,0,0,0,0,0,0])
     GPIO.output(RPi_GPIOs["RTD_button"].pin_num, GPIO.LOW)
 
 
