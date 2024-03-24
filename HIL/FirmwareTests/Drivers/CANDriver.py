@@ -1,11 +1,9 @@
-# from base_CAN_driver import BaseCANDriver
-
 import can
 import os
 import time
 from typing import List, Union
 
-class CANableDriver:
+class CANDriver:
     def __init__(self, CAN_channel: str="can0", baud_rate: int=500_000, bus_type: str="socketcan") -> None:
         self.CAN_channel = CAN_channel
         self.baud_rate = baud_rate
@@ -23,29 +21,33 @@ class CANableDriver:
 
     def read(self, delay_ms: Union[float, int]):
         """ Reads the bus and returns the first message received. """
-        assert(self.bus != None, "Connection not instantiated")
+        if self.bus is None:
+            raise IOError("Connection not instantiated")
         message = self.bus.recv(delay_ms)
         return message
         
 
     def write(self, id: int, data: List[int]):
         """ Writes specified message to the bus. """
-        assert(self.bus != None, "Connection not instantiated")
+        if self.bus is None:
+            raise IOError("Connection not instantiated")
         can_m = can.Message(arbitration_id = id, data = data)
         self.bus.send(can_m)
         
 
     def wait_until_id(self,  id: int, timeout_s: Union[float, int]=20) -> Union[List[Union[float, int]], bool]:
         """ Reads the bus and returns the message with given id or times out after specified duration. """
-        assert(self.bus != None, "Connection not instantiated")
+        if self.bus is None:
+            raise IOError("Connection not instantiated")
         start = time.time()
         while time.time() - start < timeout_s:
             message = self.read(1.0)
-            if message.arbitration_id == id:
+            if message != None and message.arbitration_id == id:
                 return message
         return None
 
     def disconnect(self):
         """ Disconnects from the CAN bus. """
-        assert(self.bus != None, "Connection not instantiated")
+        if self.bus is None:
+            raise IOError("Connection not instantiated")
         os.system('sudo ifconfig can0 down')
