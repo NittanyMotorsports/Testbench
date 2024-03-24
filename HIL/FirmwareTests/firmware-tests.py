@@ -61,7 +61,69 @@ def ready_to_drive_test():
         slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
     elif message.data[5] != 1:
         slash.add_failure(f"Inverter enable bit was not changed to 1, value is: {message.data}")
+    
+    # Step 8: Reset RPi outputs
+    GPIO.output(RPi_GPIOs["TSA"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["BrakesFront"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["BrakesRear"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["RTD_button"].pin_num, GPIO.LOW)
 
+
+def apps_test():
+
+    # Step 1: Output low on both APPS inputs
+    GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
+
+    # Step 2: Put STM into RTD state
+    GPIO.output(RPi_GPIOs["BrakesFront"].pin_num, GPIO.HIGH)
+    GPIO.output(RPi_GPIOs["BrakesRear"].pin_num, GPIO.HIGH)
+    GPIO.output(RPi_GPIOs["TSA"].pin_num, GPIO.HIGH)
+    GPIO.output(RPi_GPIOs["RTD_button"].pin_num, GPIO.HIGH)
+
+    # Step 3: Validate STM rached RTD state
+    message = CAN_BUS.wait_until_id(id=0x0C0, timeout_s=5)
+    if message == None:
+        slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
+        return
+    elif message.data[5] != 1:
+        slash.add_failure(f"Inverter enable bit was not changed to 1, value is: {message.data}")
+        return
+    
+    # Step 4: Set brake inputs back to low
+    GPIO.output(RPi_GPIOs["BrakesFront"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["BrakesRear"].pin_num, GPIO.LOW)
+    
+    # Step 5: Set both APPS inputs to high
+    GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.HIGH)
+    GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.HIGH)
+
+    # Step 6: Validate STM reports max throttle input over CAN
+    message = CAN_BUS.wait_until_id(id=0x0C0, timeout_s=5)
+    if message == None:
+        slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
+    elif ((message.data[1] << 8) | message.data[0]) != 2300:
+        slash.add_failure(f"STM didn't correctly send max throttle when both APPS set to max input. Throttle reported: {(message.data[1] << 8) | message.data[0]}")
+
+    # Step 7: Set one APPS input to low
+    GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
+
+    # Step 8: Validate STM correclty sends 0 throttle
+    message = CAN_BUS.wait_until_id(id=0x0C0, timeout_s=5)
+    if message == None:
+        slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
+        return
+    elif ((message.data[1] << 8) | message.data[0]) != 0:
+        slash.add_failure(f"STM didn't report 0 throttle. Throttle reported: {((message.data[1] << 8) | message.data[0])}")
+        return
+    
+    # Step 9: Reset RPi outputs
+    GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["BrakesFront"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["BrakesRear"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["TSA"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["RTD_button"].pin_num, GPIO.LOW)
 
 
 def apps_plus_brake_test():
@@ -72,94 +134,85 @@ def apps_plus_brake_test():
     for a small amount of time and then set back to GPIO_HIGH that throttle CAN message 
     is back to non-zero
     '''
-    # Step 1: Setting up environment (neither pedals are pressed)
-    # Device is in idle state at this point
-    GPIO.output(RPi_GPIOs["BrakesLeft"].pin_num, GPIO.LOW)
-    GPIO.output(RPi_GPIOs["BrakesRight"].pin_num, GPIO.LOW)
+
+    # Step 1: Output low on both APPS inputs
     GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
 
-    # Step 2: Check for STM CAN message (should send a zero throttle message)
-    message = CAN_BUS.wait_until_id(0X0C0)
-    if message == None:
-        slash.add_failure('Did not receive CAN message within time expected')
-    else:
-        data = message.data
-        if data[0] > 0:
-            slash.add_failure('Expected a zero throttle CAN message, recieved a non zero message') 
+    # Step 2: Put STM into RTD state
+    GPIO.output(RPi_GPIOs["BrakesFront"].pin_num, GPIO.HIGH)
+    GPIO.output(RPi_GPIOs["BrakesRear"].pin_num, GPIO.HIGH)
+    GPIO.output(RPi_GPIOs["TSA"].pin_num, GPIO.HIGH)
+    GPIO.output(RPi_GPIOs["RTD_button"].pin_num, GPIO.HIGH)
 
-    # Step 3: Setting APPS to high while brakes remain at low (throttle is being pressed)
+    # Step 3: Validate STM rached RTD state
+    message = CAN_BUS.wait_until_id(id=0x0C0, timeout_s=5)
+    if message == None:
+        slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
+        return
+    elif message.data[5] != 1:
+        slash.add_failure(f"Inverter enable bit was not changed to 1, value is: {message.data}")
+        return
+    
+    # Step 4: Set brake inputs back to low
+    GPIO.output(RPi_GPIOs["BrakesFront"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["BrakesRear"].pin_num, GPIO.LOW)
+
+    # Step 5: Delay for 100 milliseconds
+    time.sleep(0.1)
+
+    # Step 6: Setting APPS to high while brakes remain at low
     GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.HIGH)
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.HIGH)
 
-    # Step 4: Check for STM CAN message (should send a non-zero throttle message)
+    # Step 7: Check for STM reporting max throttle
     message = CAN_BUS.wait_until_id(0X0C0)
     if message == None:
-        slash.add_failure('Did not receive CAN message within time expected')
-    else:
-        data = message.data
-        if data[0] == 0:
-            slash.add_failure('Expected a non zero throttle CAN message, recieved a zero message') 
+        slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
+    elif ((message.data[1] << 8) | message.data[0]) != 2300:
+        slash.add_failure(slash.add_failure(f"STM didn't correctly send max throttle when both APPS set to max input. Throttle reported: {(message.data[1] << 8) | message.data[0]}")) 
 
-    # Step 5: Setting Brakes to high while APPS remains at high (both pedals are being pressed):
+    # Step 8: Setting brakes to high while throttle input remains high
     GPIO.output(RPi_GPIOs["BrakesLeft"].pin_num, GPIO.HIGH)
     GPIO.output(RPi_GPIOs["BrakesRight"].pin_num, GPIO.HIGH)
 
-    # Step 6: Check for STM CAN message (should send a zero throttle message)
+    # Step 9: Delay for 100 milliseconds
+    time.sleep(0.1)
+
+    # Step 10: Check for STM reporting 0 throttle input
     message = CAN_BUS.wait_until_id(0X0C0)
     if message == None:
         slash.add_failure('Did not receive CAN message within time expected')
-    else:
-        data = message.data
-        if data[0] > 0:
-            slash.add_failure('Expected a zero throttle CAN message, recieved a non zero message') 
+    elif ((message.data[1] << 8) | message.data[0]) != 0:
+            slash.add_failure(f"Throttle input given while brakes pressed didn't result in 0 throttle reported. Throttle reported: {((message.data[1] << 8) | message.data[0])}") 
 
-    time.sleep(1) # Add time delay to emulate real procedure
-
-    # Step 7: Setting Brakes to low and keeping APPS at high:
-    GPIO.output(RPi_GPIOs["BrakesLeft"].pin_num, GPIO.LOW)
-    GPIO.output(RPi_GPIOs["BrakesRight"].pin_num, GPIO.LOW)
-
-    # Step 8: Check for STM CAN message (should send a non-zero throttle message as we are out of the fault state)
-    message = CAN_BUS.wait_until_id(0X0C0)
-    if message == None:
-        slash.add_failure('Did not receive CAN message within time expected')
-    else:
-        data = message.data
-        if data[0] == 0:
-            slash.add_failure('Expected a non zero throttle CAN message, recieved a zero message') 
-
-    # Step 9: Setting Brakes to low and APPS to low
+    # Step 11: Set throttle and brakes back to low
     GPIO.output(RPi_GPIOs["BrakesLeft"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["BrakesRight"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.LOW)
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
 
-    # Step 10: Check for STM CAN message (should send a zero throttle message)
-    message = CAN_BUS.wait_until_id(0X0C0)
-    if message == None:
-        slash.add_failure('Did not receive CAN message within time expected')
-    else:
-        data = message.data
-        if data[0] > 0:
-            slash.add_failure('Expected a zero throttle CAN message, recieved a non zero message') 
-
-    time.sleep(1) # Add time delay to emulate real procedure
-
-
-    # Step 11: Setting APPS back to high
+    # Step 12: Delay for 100 milliseconds
+    time.sleep(0.1)
+    
+    # Step 13: Set throttle back to max
     GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.HIGH)
     GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.HIGH)
 
-    # Step 12: Check for STM CAN message (should be back to a non-zero throttle message)
+    # Step 14: Check for STM reporting max throttle
     message = CAN_BUS.wait_until_id(0X0C0)
     if message == None:
-        slash.add_failure('Did not receive CAN message within time expected')
-    else:
-        data = message.data
-        if data[0] == 0:
-            slash.add_failure('Expected a non zero throttle CAN message, recieved a zero message')
+        slash.add_failure("Throttle message with id: 0x0C0 was not received within 5 seconds")
+    elif ((message.data[1] << 8) | message.data[0]) != 2300:
+        slash.add_failure(slash.add_failure(f"STM didn't correctly send max throttle when both APPS set to max input. Throttle reported: {(message.data[1] << 8) | message.data[0]}")) 
 
+    # Step 15: Reset RPi outputs
+    GPIO.output(RPi_GPIOs["APPSLeft"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["APPSRight"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["BrakesLeft"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["BrakesRight"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["TSA"].pin_num, GPIO.LOW)
+    GPIO.output(RPi_GPIOs["RTD_button"].pin_num, GPIO.LOW)
 
 
 def configure_env():
@@ -175,4 +228,5 @@ def configure_env():
 def test_driver():
     configure_env()
     ready_to_drive_test()
+    apps_test()
     apps_plus_brake_test()
