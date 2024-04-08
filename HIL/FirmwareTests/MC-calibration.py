@@ -42,7 +42,7 @@ def calibration():
     print(f"inputted: {throttle_value}")
 
     throttle_l8 = throttle_value & 0xFF
-    throttle_h8 = throttle_value & 0xFF00
+    throttle_h8 = (throttle_value & 0xFF00) >> 8
     CAN_BUS.write(id=0x0C0, data=[throttle_l8,throttle_h8,0,0,0,1,0,0])
 
     # Create dictionary buffer to hold data where time is key and voltage is value
