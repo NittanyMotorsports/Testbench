@@ -13,13 +13,14 @@ RPi_GPIOs = {
 }
 
 CAN_BUS = CANDriver()
+CAN_BUS.connect()
 
 # Function to write dataset contained in dictionary to a file
 def write_data_to_file(dict):
     with open('output.txt', 'w') as file:
         # Iterate through the dictionary
-        for key,value in dict:
-            file.write(f"{key},{value}\n")
+        for key in dict.keys():
+            file.write(f"{key},{dict[key]}\n")
 
 def calibration():
 
@@ -34,14 +35,14 @@ def calibration():
         CAN_BUS.write(id=0x0C0, data=[0,0,0,0,0,1,0,0])
 
     # whatever newton meters multiply by 10
-    throttle_value = input("input starting value for throttle: ")
+    throttle_value = int(input("input starting value for throttle: "))
     check = input(f"inputted: {throttle_value}, correct? (y/n) ")
     if check.lower() != "y":
         throttle_value = input("input starting value for throttle: ")
     print(f"inputted: {throttle_value}")
 
     throttle_l8 = throttle_value & 0xFF
-    throttle_h8 = throttle_value & 0xFF00
+    throttle_h8 = (throttle_value & 0xFF00) >> 8
     CAN_BUS.write(id=0x0C0, data=[throttle_l8,throttle_h8,0,0,0,1,0,0])
 
     # Create dictionary buffer to hold data where time is key and voltage is value
@@ -56,22 +57,23 @@ def calibration():
 
             if message:
                 # Retrieve data in the first 2 bytes of CAN message
-                voltage = message[1] << 8 | message[0]
+                voltage = message.data[1] << 8 | message.data[0]
 
                 # Get current elapsed time
-                current_time = time.time() - start_time()
+                current_time = time.time() - start_time
 
                 # Add data point to dictionary
-                data_set[current_time] = voltage
+                data_set[current_time] = voltage * 3.3 / (2 ** 12 - 1)
 
     except KeyboardInterrupt:
         print("Keyboard Interrupt Occurred.")
 
         # write data collected in the buffer to a text file
         write_data_to_file(data_set)
-        
-        for key in data_set.keys():
-            print(f"{key}, {data_set[keys]} V")
+
+        # print first 10 values
+        for key in list(data_set.keys())[:10]:
+            print(f"{key}, {data_set[key]} V")
 
     return
 
