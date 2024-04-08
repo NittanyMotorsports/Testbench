@@ -72,12 +72,8 @@ def calibration():
         write_data_to_file(data_set)
 
         # print first 10 values
-        count = 0
-        for key in data_set.keys():
-            if count >= 10:
-                break
+        for key in list(data_set.keys())[:10]:
             print(f"{key}, {data_set[key]} V")
-            count += 1
 
     return
 
