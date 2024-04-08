@@ -1,5 +1,5 @@
 """ File for calibrating the motor controller """
-from .Drivers.CANDriver import CANDriver
+from Drivers.CANDriver import CANDriver
 import time
 import RPi.GPIO as GPIO
 
