@@ -1,6 +1,6 @@
-import slash
-import RPi.GPIO as GPIO
-from .Drivers.CANDriver import CANDriver
+# import slash
+# import RPi.GPIO as GPIO
+from Drivers.CANDriver import CANDriver
 import time
 
 class Pin:
