@@ -60,8 +60,8 @@ all: main-build
 main-build: MC_Calibration.elf secondary-outputs
 
 # Tool invocations
-MC_Calibration.elf MC_Calibration.map: $(OBJS) $(USER_OBJS) C:\Users\jacop\STM32CubeIDE\workspace_1.12.0\MC_Calibration\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "MC_Calibration.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\jacop\STM32CubeIDE\workspace_1.12.0\MC_Calibration\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="MC_Calibration.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+MC_Calibration.elf MC_Calibration.map: $(OBJS) $(USER_OBJS) C:\Users\jacop\NittanyMotorsports\Testbench\HIL\STM_Firmware\MC_Calibration\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "MC_Calibration.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\jacop\NittanyMotorsports\Testbench\HIL\STM_Firmware\MC_Calibration\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="MC_Calibration.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

@@ -60,23 +60,8 @@ static void MX_CAN1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint32_t adc_val;
-
-//void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
-//	adc_val = HAL_ADC_GetValue(&hadc1);
-//
-//	CAN_TxHeaderTypeDef transmitHeader = {
-//		.StdId = 0x110,
-//		.IDE = CAN_ID_STD,
-//		.RTR = CAN_RTR_DATA,
-//		.DLC = 8
-//	};
-//	uint8_t transmitData[8] = {0};
-//	transmitData[0] = (uint8_t)((adc_val) & 0x000000FF);
-//	transmitData[1] = (uint8_t)(((adc_val) & 0x0000FF00) >> 8);
-//	uint32_t mailbox;
-//	HAL_CAN_AddTxMessage(&hcan1, &transmitHeader, transmitData, &mailbox);
-//}
+uint32_t adc_val = 0;
+int failed = 0;
 
 /* USER CODE END 0 */
 
@@ -114,7 +99,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   //HAL_ADC_Start_IT (&hadc1); // start the ADC interrupt
   HAL_CAN_Start(&hcan1);
-  int failed = 0;
+  HAL_ADC_Start_DMA(&hadc1, &adc_val, 2);
 
 
   /* USER CODE END 2 */
@@ -124,27 +109,6 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  HAL_ADC_Start(&hadc1);
-	  HAL_ADC_PollForConversion(&hadc1,10);
-	  adc_val = HAL_ADC_GetValue(&hadc1);
-	  HAL_ADC_Stop(&hadc1);
-	  CAN_TxHeaderTypeDef transmitHeader = {
-		.StdId = 0x110,
-	  	.IDE = CAN_ID_STD,
-		.RTR = CAN_RTR_DATA,
-		.DLC = 8
-	  };
-	  uint8_t transmitData[8] = {0};
-	  transmitData[0] = (uint8_t)((adc_val) & 0x000000FF);
-	  transmitData[1] = (uint8_t)(((adc_val) & 0x0000FF00) >> 8);
-	  uint32_t mailbox;
-	  if(HAL_CAN_AddTxMessage(&hcan1, &transmitHeader, transmitData, &mailbox) != HAL_OK){
-		  failed = 1;
-	  }
-	  else{
-		  failed = 0;
-	  }
-
 
     /* USER CODE BEGIN 3 */
   }
@@ -222,7 +186,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
@@ -326,6 +290,26 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
+	  CAN_TxHeaderTypeDef transmitHeader = {
+		  .StdId = 0x110,
+		  .IDE = CAN_ID_STD,
+		  .RTR = CAN_RTR_DATA,
+		  .DLC = 8
+	  };
+	  uint8_t transmitData[8] = {0};
+	  transmitData[0] = (uint8_t)((adc_val) & 0x000000FF);
+	  transmitData[1] = (uint8_t)(((adc_val) & 0x0000FF00) >> 8);
+	  uint32_t mailbox;
+	  if(HAL_CAN_AddTxMessage(&hcan1, &transmitHeader, transmitData, &mailbox) != HAL_OK){
+		  failed = 1;
+	  }
+	  else{
+		  failed = 0;
+	  }
+}
+
 
 /* USER CODE END 4 */
 
