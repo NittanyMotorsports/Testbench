@@ -31,7 +31,7 @@ class CANDriver:
         """ Writes specified message to the bus. """
         if self.bus is None:
             raise IOError("Connection not instantiated")
-        can_m = can.Message(arbitration_id = id, data = data)
+        can_m = can.Message(arbitration_id = id, data = data, is_extended_id=False)
         self.bus.send(can_m)
         
 
